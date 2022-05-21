@@ -7,7 +7,7 @@ sudo sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
 # 关闭防火墙
 systemctl disable --now firewalld
 # 安装部分依赖
-yum install tc socat conntrack-tools -y
+yum install tc socat conntrack-tools bash-completion -y
 
 ## 6443	Kubernetes API 服务器
 #firewall-cmd --zone=public --add-port=6443/tcp --permanent
