@@ -31,7 +31,7 @@ install_runc() {
 }
 
 init_system() {
-    # 启用cgoup v2，切换 cgroup 版本需要重启服务器
+    # 启用cgoup v2
     cat /sys/fs/cgroup/cgroup.controllers || grubby --update-kernel=ALL --args="systemd.unified_cgroup_hierarchy=1"
 
     # 使用 containerd 作为 CRI 运行时的必要步骤
@@ -82,6 +82,24 @@ install_k8s() {
     systemctl enable kubelet.service
     kubectl completion bash >/etc/bash_completion.d/kubectl
     source /etc/bash_completion.d/kubectl
+    cat >kubeadm.yaml <<EOF
+---
+apiServer:
+  timeoutForControlPlane: 4m0s
+apiVersion: kubeadm.k8s.io/v1beta3
+certificatesDir: /etc/kubernetes/pki
+clusterName: kubernetes
+imageRepository: k8s.gcr.io
+kind: ClusterConfiguration
+networking:
+  dnsDomain: cluster.local
+  podSubnet: 100.64.0.0/10
+  serviceSubnet: 10.96.0.0/12
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: "ipvs"
+EOF
     kubeadm init --config kubeadm.yaml --upload-certs
 }
 
@@ -89,5 +107,6 @@ type jq || install_jq
 type containerd || install_containerd
 # install_runc
 runc -v >/dev/null 2>&1 || install_runc
+
 init_system
 install_k8s
